@@ -1,0 +1,67 @@
+
+@layer base, glow;
+
+@import url('./base.css') layer(base);
+
+:root {
+    --bg-dark: oklch(28% 0.03 260);
+    --bg: oklch(32% 0.03 260);
+    --surface: oklch(95% 0.00011 270);
+}
+
+body {
+    background: var(--bg-dark);
+    color: white;
+}
+.white-area * {
+    color: black;
+}
+.white-area {
+    background: var(--surface);
+}
+.glow-card {
+    background: var(--bg);
+}
+
+.glowing-border {
+    --gradient-glow: yellow, green, blue, purple, red;
+
+    position: relative;
+    isolation: isolate; /* ??? */
+
+    padding: 8rem 3rem;
+    max-width: 60ch;
+    
+    border: 10px solid transparent; /* gives border but using transparent so we can make it using a background image/gradient instead */
+    border-left: 0; /* remove border/effect from left side */
+    border-radius: 0 100vw 100vw 0; /* rounds off top right and bottom corner sections */
+    /* Canvas color is the bg color if you haven't declared a color, meaning it follows the rest of the page's color? */
+    background: 
+        linear-gradient(var(--surface, canvas) 0 0) padding-box,
+        conic-gradient(from -90deg, var(--gradient-glow)) border-box;
+}
+.glowing-border::before,
+.glowing-border::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+}
+
+.glowing-border::before {
+    /* NOTE: For -1 z-index here, without 'isolation: isolate;' on glowing-border itself, this means "behind everything on the page".
+            BUT with isolation: isolate, z-index: -1; means "behind everything within this card's context". So the gradient can sit behind the card's content but still be visible because it's part of the card's isolated layering system
+    */
+    z-index: -1; /* put behind the text obv */
+    background: var(--surface, canvas);
+    inset: 0.5rem; /* same as ::after's but positive - so it pulls inward by the same amount? */
+    scale: 1.2 1;
+    transform-origin: right;
+    filter: blur(1rem);
+}
+.glowing-border::after {
+    z-index: -2;
+    background: conic-gradient(from -90deg, var(--gradient-glow));
+    inset: -1.5rem; /* negative here kinda 'pulls' the glow effect out to be on both sides? */
+    filter: blur(1rem);
+    opacity: 0.25;
+}

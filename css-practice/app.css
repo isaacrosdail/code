@@ -1,0 +1,62 @@
+
+@layer base, components, app;
+
+@import url('./base.css') layer(base);
+@import url('./carousel.css') layer(components);
+
+p {
+    font-size: 1.2rem;
+    color: blue;
+}
+
+button {
+    color: black;
+    padding: 0.5em 1.25em;
+    /* STUDY:  */
+    background:
+        linear-gradient(white) padding-box,
+        conic-gradient(red, blue, red) border-box;
+}
+
+
+/* MISC SNIPPETS / STATEMENTS TO FAMILIARIZE WITH */
+
+.controls {
+    border: 1px solid rgb(242, 0, 255);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    justify-items: center;
+}
+
+.controls-header {
+    /* grid line spanning
+        1 = first grid col line
+        -1 = last grid col line, counting from the end
+        so 1/-1 means "from the very left edge of the grid to the very right edge
+    */
+    grid-column: 1 / -1;
+    /* justify-self: center; */
+    border: 1px solid purple;
+}
+
+.controls-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    border: 1px dotted cyan;
+}
+/* .controls-section > * {
+    width: 2rem;
+} */
+/* .controls-section:first-of-type {
+    grid-column: 1;
+}
+.controls-section:last-of-type {
+    grid-column: 3;
+}
+.controls-section:nth-of-type(2) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+} */

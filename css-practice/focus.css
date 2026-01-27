@@ -1,0 +1,24 @@
+
+@layer base, focus;
+
+@import url('./base.css') layer(base);
+
+* {
+    padding: 0.5rem;
+}
+
+.field,
+.field-two {
+    opacity: 0.6;
+    padding: 0.5rem;
+    border: 1px solid red;
+    margin-bottom: 1rem;
+}
+.field:focus-visible {
+    opacity: 1;
+    border-color: blue;
+}
+.field-two:focus-within {
+    opacity: 1;
+    border-color: blue;
+}

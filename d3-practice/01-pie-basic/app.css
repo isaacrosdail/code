@@ -1,0 +1,25 @@
+
+body {
+    background: rgb(210, 210, 210);
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    place-items: center;
+}
+.pie-label {
+    font-size: 10px;
+    fill: white;
+    pointer-events: none;
+}
+.options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.options button {
+    cursor: pointer;
+    background: skyblue;
+    height: 30px;
+    width: 100px;
+}

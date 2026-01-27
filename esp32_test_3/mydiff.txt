@@ -1,0 +1,303 @@
+diff --git a/README.md b/README.md
+index 83da811..a118c2c 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,93 @@
+-## Started 31.05.25
++## Started: May 31, 2025
++## Temperature sensor added: Dec 25, 2025
++## Automation scripts added: Dec 28, 2025
+ 
+-Thanks to LLMs for getting this sorted so I could reverse engineer now that we can at least get SOMETHING displayed!
++Beginning of work on IoT 'wing' of Vesper. Will remain a side-priority for the immediate future.
+ 
+-ESP32 + ST7789V-controller LCD display
+\ No newline at end of file
++ESP32 + :
++- ST7789V-controller LCD display
++- DS18B20 temperature probe (with 4.7k Ohm pull-up resistor)
++
++## Quick Reference
++
++Each time we open the project:
++```bash
++source ./dev.sh     # Attaches USB device for passthrough (windows), then activates environment in current shell, & runs setup export.sh script/sets PATH stuff.
++```
++**Note:** Don't use `./dev.sh` alone. It runs in a subshell, so the venv activates there but disappears when the subshell exits.
++
++## Hardware
++
++**Temperature Sensor:** DS18B20 waterproof probe
++- Protocol: 1-Wire (multiple devices on single data line)
++- **Requires external 4.7kΩ pull-up resistor** between data line and 3.3V
++- Wiring: Red (3.3V), Black (GND), Data (GPIO 4)
++
++**Display:** ST7789V controller, 240x320 resolution (Seengreat)
++- Interface: SPI
++- No pull-up resistors needed
++
++## Development Workflow
++
++```bash
++source ./dev.sh       # Activate environment
++idf.py build          # Compile
++idf.py flash monitor  # Flash to ESP32 & view serial output (in terminal)
++```
++
++## Dec 28, 2025: Added dev.sh to spare us the pain of some "every time we open the project to work" setup.
++So each time we boot things up to work, we'll have to run the below:
++```bash
++source ./dev.sh
++
++# Note: Running just this below instead doesn't work. It runs in subshell so the venv becomes active there, but when we exit the subshell, venv goes too.
++./dev.sh
++```
++
++## Temperature sensor setup Dec 25, 2025 :D
++
++Reminders:
++- The compiler used is determined by file extension? So we're rolling with C but could switch to C++
++- CMakeLists.txt in root is boilerplate required for ESP-IDF. Basically never touch this.
++- CMakeLists.txt in main/ is where we specify what code to compile
++    - SRCS: our source files (main.c, hello_world.c, etc)
++    - REQUIRES: extern libs we need (esp_driver_spi & esp_driver_gpio for our display)
++
++## Notes on install stuff/steps to get ESP-IDF working in WSL:
++
++1. Install ESP-IDF Requirements for Linux
++```bash
++sudo apt-get install git wget flex bison gperf python3-pip python3-venv python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util
++```
++2. Install `usbipd` in Powershell command prompt & follow their instructions at: TODO-ADD-LINK
++```bash
++winget install usbipd
++```
++
++3. Set up ESP-IDF stuff in WSL
++```bash
++
++```
++
++
++## Temperature sensor notes:
++Using a DS18B20 temperature probe, which requires both the db18b20 drivers as well as the OneWire protocol, which is a comm protocol that lets multiple devices share a single data wire. The DS18B20 temp sensor uses this protocol.
++
++
++## Project Structure notes
++
++`CMakeLists.txt` in `main/` tells ESP-IDF build sys how to compile our "component" (the "main" component). Invoking the idf_component_register function looks as follows:
++
++```c
++idf_component_register(SRCS "main.c" "my_helper_file.c"             // source files to compile
++                    PRIV_REQUIRES spi_flash espressif__onewire_bus  // private deps (components we use internally)
++                    INCLUDE_DIRS ""                                 // add'l header search paths, usually empty unless we have custom headers to expose
++                    REQUIRES esp_driver_gpio)                       // public deps (components we expose to others)
++```
++
++
++## Notes
++
++- Compiler determined by file extension (.c = C, .cpp = C++)
++- `dev.sh` handles USB passthrough + ESP-IDF environment setup
++- Internal pull-up resistors insufficient for DS18B20 with long cable - external 4.7kΩ required
+diff --git a/main/CMakeLists.txt b/main/CMakeLists.txt
+index 074137d..4aa1a5c 100644
+--- a/main/CMakeLists.txt
++++ b/main/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-idf_component_register(SRCS "hello_world_main.c" "display.c"
+-                    PRIV_REQUIRES spi_flash
++idf_component_register(SRCS "hello_world_main.c" "temperature.c"
++                    PRIV_REQUIRES spi_flash espressif__onewire_bus
+                     INCLUDE_DIRS ""
+-                    REQUIRES esp_driver_spi esp_driver_gpio)
++                    REQUIRES esp_driver_gpio)
+diff --git a/main/CMakeLists_old.txt b/main/CMakeLists_old.txt
+new file mode 100644
+index 0000000..074137d
+--- /dev/null
++++ b/main/CMakeLists_old.txt
+@@ -0,0 +1,4 @@
++idf_component_register(SRCS "hello_world_main.c" "display.c"
++                    PRIV_REQUIRES spi_flash
++                    INCLUDE_DIRS ""
++                    REQUIRES esp_driver_spi esp_driver_gpio)
+diff --git a/main/hello_world_main.c b/main/hello_world_main.c
+index a8792a6..83d70d2 100644
+--- a/main/hello_world_main.c
++++ b/main/hello_world_main.c
+@@ -14,7 +14,9 @@
+ #include "esp_system.h"
+ 
+ // Adding our display header file
+-#include "display.h"
++// #include "display.h"
++// Temperature reading header file
++#include "temperature.h"
+ 
+ void app_main(void)
+ {
+@@ -46,15 +48,23 @@ void app_main(void)
+     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
+ 
+     // ADDED OUR DISPLAY CODE HERE
+-    printf("Initializing diplay..\n");
+-    display_init();
+-    printf("Display initialized!\n");
+-    printf("Calling new test function!\n");
+-    send_one_spi_byte();
+-    printf("Calling wake display..\n");
+-    wake_up_display();
++    // printf("Initializing diplay..\n");
++    // display_init();
++    // printf("Display initialized!\n");
++    // printf("Calling new test function!\n");
++    // send_one_spi_byte();
++    // printf("Calling wake display..\n");
++    // wake_up_display();
+     // ABOVE IS OUR DISPLAY CODE
+ 
++    // Temperature sensor stuff here
++    temperature_init();
++    while(1) {
++        float temp = temperature_read();
++        printf("%.2f\n", temp);
++        vTaskDelay(1000 / portTICK_PERIOD_MS);
++    }
++
+     for (int i = 10; i >= 0; i--) {
+         printf("Restarting in %d seconds...\n", i);
+         vTaskDelay(1000 / portTICK_PERIOD_MS);
+diff --git a/main/idf_component.yml b/main/idf_component.yml
+new file mode 100644
+index 0000000..b762141
+--- /dev/null
++++ b/main/idf_component.yml
+@@ -0,0 +1,4 @@
++# idf_component.yml goes in each module (main/, etc) to manage its deps?
++dependencies:
++  espressif/ds18b20:
++    version: "^0.2.0" # This tells ESP-IDF: "When you build the main component, go fetch version 1.0.0+ of the DS18B20 library from Espressif's component registry."
+\ No newline at end of file
+diff --git a/main/temperature.c b/main/temperature.c
+new file mode 100644
+index 0000000..396412c
+--- /dev/null
++++ b/main/temperature.c
+@@ -0,0 +1,87 @@
++#include <stdio.h>
++#include "esp_log.h"
++#include "freertos/FreeRTOS.h"
++#include "freertos/task.h"
++#include "onewire_bus.h"
++#include "ds18b20.h"
++
++#include "temperature.h"
++
++#define ONEWIRE_BUS_GPIO    4
++#define ONEWIRE_MAX_DS18B20 2
++
++// static => "file-scope only"
++static onewire_bus_handle_t bus = NULL;
++static ds18b20_device_handle_t ds18b20s[ONEWIRE_MAX_DS18B20];
++static int ds18b20_device_num = 0;
++
++static const char *TAG = "test";
++
++void temperature_init(void) {
++    // install 1-wire bus
++    onewire_bus_config_t bus_config = {
++        .bus_gpio_num = ONEWIRE_BUS_GPIO,
++        .flags = {
++            .en_pull_up = true, // enable the internal pull-up resistor in case the extern device doesn't have one. TODO: Change this once we order a 4.7k ohm pull-up resistor :D
++        }
++    };
++    onewire_bus_rmt_config_t rmt_config = {
++        .max_rx_bytes = 10, // 1byte ROM command + 8byte ROM number + 1byte device command
++    };
++
++    ESP_ERROR_CHECK(onewire_new_bus_rmt(&bus_config, &rmt_config, &bus));
++    ESP_LOGI(TAG, "1-Wire bus installed on GPIO%d", ONEWIRE_BUS_GPIO);
++
++    // Test if bus is responsive at all
++    onewire_bus_reset(bus);
++    ESP_LOGI(TAG, "Bus reset attempted");
++
++    onewire_device_iter_handle_t iter = NULL;
++    onewire_device_t next_onewire_device;
++    esp_err_t search_result = ESP_OK;
++
++    // create 1-wire device iterator, which is used for device search
++    ESP_ERROR_CHECK(onewire_new_device_iter(bus, &iter));
++    ESP_LOGI(TAG, "Device iterator created, start searching...");
++    do {
++        search_result = onewire_device_iter_get_next(iter, &next_onewire_device);
++        if (search_result == ESP_OK) { // found a new device, let's check if we can upgrade it to a DS18B20
++            ds18b20_config_t ds_cfg = {};
++            onewire_device_address_t address;
++            // check if the device is a DS18B20, if so, return the ds18b20 handle
++            if (ds18b20_new_device_from_enumeration(&next_onewire_device, &ds_cfg, &ds18b20s[ds18b20_device_num]) == ESP_OK) {
++                ds18b20_get_device_address(ds18b20s[ds18b20_device_num], &address);
++                ESP_LOGI(TAG, "Found a DS18B20[%d], address: %016llX", ds18b20_device_num, address);
++                ds18b20_device_num++;
++                if (ds18b20_device_num >= ONEWIRE_MAX_DS18B20) {
++                    ESP_LOGI(TAG, "Max DS18B20 number reached, stop searching...");
++                    break;
++                }
++            } else {
++                ESP_LOGI(TAG, "Found an unknown device, address: %016llX", next_onewire_device.address);
++            }
++        }
++    } while (search_result != ESP_ERR_NOT_FOUND);
++    ESP_ERROR_CHECK(onewire_del_device_iter(iter));
++    ESP_LOGI(TAG, "Searching done, %d DS18B20 device(s) found", ds18b20_device_num);
++}
++
++float temperature_read(void) {
++    // We have our temp sensor connected via the 1-Wire protocol on GPIO pin 4.
++    /* Sensor doesn't continuously broadcast temperature, we have to:
++        1. Ask it to measure ("trigger conversion")
++        2. Wait for it to finish
++        3. Request the result
++    */
++    // Without this check, accessing ds18b20[0] when no sensor exists would crash due to null pointer dereference.
++    if (ds18b20_device_num == 0) {
++        ESP_LOGW(TAG, "No DS18B20 sensors found"); // ESP32 logging at the W warning level
++        return -999.0f; // Error "sentinel"
++    }
++
++    float temperature;
++    ESP_ERROR_CHECK(ds18b20_trigger_temperature_conversion(ds18b20s[0]));
++    ESP_ERROR_CHECK(ds18b20_get_temperature(ds18b20s[0], &temperature));
++
++    return temperature;
++}
+diff --git a/main/temperature.h b/main/temperature.h
+new file mode 100644
+index 0000000..85c0f8a
+--- /dev/null
++++ b/main/temperature.h
+@@ -0,0 +1,22 @@
++// Remember, .h files say "Hey, here are the functions we're using from this. I promise these exist"
++// These are called forward declarations
++
++/**
++ * @brief Initialize DS18B20 temperature sensor on GPIO 4
++ * 
++ * Searches 1-Wire bus for sensors and stores handles.
++ * Logs warning if no sensors found but doesn't crash.
++ * 
++ * @note Requires external 4.7kΩ pull-up resistor on data line
++ */
++void temperature_init(void);
++
++/**
++ * @brief Read temperature from DS18B20
++ * 
++ * Triggers conversion, waits 800ms, retrieves measurement from ds18b20s[0].
++ * 
++ * @return Temperature in Celsius, or -999.0f if no sensor available
++ * @warning Blocking - sleeps during conversion
++ */
++float temperature_read(void);
+\ No newline at end of file

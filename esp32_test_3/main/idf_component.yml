@@ -1,0 +1,4 @@
+# idf_component.yml goes in each module (main/, etc) to manage its deps?
+dependencies:
+  espressif/ds18b20:
+    version: "^0.2.0" # This tells ESP-IDF: "When you build the main component, go fetch version 1.0.0+ of the DS18B20 library from Espressif's component registry."

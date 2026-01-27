@@ -1,0 +1,23 @@
+# Build outputs
+build/
+.cache/
+dist/
+*.bin
+*.elf
+*.map
+
+# ESP-IDF specific
+sdkconfig
+sdkconfig.old
+sdkconfig.old.*
+# Downloaded deps, similar to node_modules
+managed_components/
+
+# IDE/Editor stuff
+.vscode/
+
+# Logs
+*.log
+
+# Auto-generated dep lock file
+dependencies.lock

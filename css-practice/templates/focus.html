@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Practice</title>
+    <link rel="stylesheet" href="../focus.css">
+</head>
+<body>
+    <div>
+        <h3>With :focus-visible() on the parent:</h3>
+        Here, focusing an input does not change the outline color.
+        Clicking the input gives focus to the input element, not the parent .field div.
+        Since :focus-visible only applies when the element itself is focused, 
+        the selector does not match and no styles are applied.
+        <form>
+            <div class="field">
+                <label for="username">Username</label>
+                <input id="username" type="text" />
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" />
+            </div>
+        </form>
+    </div>
+    <div>
+        <h3>With :focus-within() on the parent:</h3>
+        Here, the outline does change using :focus-within.
+        When the input is focused, the parent .field-two div matches :focus-within because one of its descendants has focus, so the styles apply.
+        <form>
+            <div class="field-two">
+                <label for="username">Username</label>
+                <input id="username" type="text" />
+            </div>
+
+            <div class="field-two">
+                <label for="password">Password</label>
+                <input id="password" type="password" />
+            </div>
+        </form>
+    </div>
+</body>
+</html>

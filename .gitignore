@@ -1,4 +1,16 @@
 
+node_modules/
+build/
+dist/
+.env
+.env.local
+npm-debug.log
+cache/
+
+sdkconfig
+sdkconfig.old
+*.bin
+*.elf
 
 venv/
 .venv/

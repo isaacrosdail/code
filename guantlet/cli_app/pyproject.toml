@@ -1,0 +1,14 @@
+[project]
+name = "mypackagename"
+version = "0.0.1"
+authors = [
+    { name="Isaac", email="myemail@email.com" },
+]
+description = "Learning project"
+readme = "README.md"
+requires-python = ">=3.13.3"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"

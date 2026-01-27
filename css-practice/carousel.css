@@ -1,0 +1,57 @@
+
+/* Some tokens needed */
+:root {
+    --gap-sm: 0.5rem;
+    --space-sm: 0.5rem;
+    --bg: grey;
+    --border-radius: 0.5rem;
+}
+
+/* Button for slider to right */
+.slider-btn {
+    border: 1px solid red;
+    cursor: pointer;
+}
+#next-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+#back-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.slider-container {
+    position: relative; /* positioning context for next-btn */
+}
+.slider {
+    /* display: grid; */
+    display: flex;
+    gap: var(--gap-sm);
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    /* grid-auto-flow: column; */
+    /* grid-auto-columns: 25%; */
+
+    overflow-x: auto;
+    overscroll-behavior-inline: contain; /* contains scrolling behavior if you get to the end, only focused on inline cause we're only scrolling on the inline axis */
+}
+.slider-element {
+    display: grid;
+    flex: 0 0 100%; /* take up exactly 100% of flex container width (slider) */
+    scroll-snap-align: start; /* pairs well with scroll-snap-type? */
+    grid-template-rows: min-content; /* first row being created (image) is the smallest size, so it's gonna fit the image so it can't overflow? */
+    padding: var(--space-sm);
+    background: var(--bg);
+    border-radius: var(--border-radius);
+}
+/* Slideshow Styling */
+.slider-element img {
+    inline-size: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover; /* prevents aspect-ratio from 'squishing' images, instead might crop them? */
+}
+

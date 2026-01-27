@@ -1,0 +1,23 @@
+{
+  "name": "d3-practice",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacrosdail/d3-practice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/isaacrosdail/d3-practice/issues"
+  },
+  "homepage": "https://github.com/isaacrosdail/d3-practice#readme",
+  "description": "",
+  "dependencies": {
+    "d3": "^7.9.0"
+  }
+}

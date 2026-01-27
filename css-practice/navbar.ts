@@ -1,0 +1,53 @@
+// Also ripped from Vesper, alongisde navbar.html and navbar.css, for the sake of practice/refinement
+
+
+function toggleMobileNav(mobileNav: HTMLElement, hamburgerBtn: HTMLElement): void {
+    mobileNav?.classList.toggle('is-open');
+    const isOpen = mobileNav?.classList.contains('is-open'); // set proper bool for is-open state
+    hamburgerBtn.setAttribute('aria-expanded', String(isOpen)); // toggle aria-expanded value
+    hamburgerBtn.classList.toggle('is-open', isOpen);
+    if (isOpen) {
+        mobileNav.removeAttribute('inert');
+        mobileNav.querySelector('a')?.focus(); // focus on first anchor el in nav
+    } else {
+        mobileNav.setAttribute('inert', '');
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const mobileNav = document.querySelector<HTMLElement>('#nav-mobile-container');
+    const modal = document.querySelector<HTMLDialogElement>('.profile-modal');
+    const mq = window.matchMedia('(max-width: 768px)'); // uses a media query obj in JS, syncs JS state with CSS breakpoint
+    const hamburgerBtn = document.querySelector<HTMLButtonElement>('.hamburger-btn');
+    if (!mobileNav || !modal || !hamburgerBtn) return;
+
+    document.addEventListener('click', (e) => {
+        const isOpen = mobileNav?.classList.contains('is-open');
+        if (!(e.target instanceof HTMLElement)) return;
+
+        // Toggle mobile nav
+        if (e.target.matches('.hamburger-btn')) {
+            toggleMobileNav(mobileNav, hamburgerBtn);
+        }
+
+        // TODO: Auto-close mobile-nav upon click elsewhere
+        // mobile nav is open + click wasnt in navbar
+        if (isOpen && !e.target.closest('#mobilenav') && !e.target.matches('.hamburger-btn')) {
+            toggleMobileNav(mobileNav, hamburgerBtn);
+        }
+        if (e.target.matches('.profile-btn')) {
+            modal?.showModal();
+        }
+        if (e.target.matches('#close-profile-modal-btn')) {
+            modal?.close();
+        }
+    });
+
+    // Reset nav state when switching to desktop
+    mq.addEventListener('change', (e) => {
+        // True when window <= 768px
+        if (mobileNav?.classList.contains('is-open') && !e.matches) {
+            toggleMobileNav(mobileNav, hamburgerBtn);
+        }
+    });
+});
