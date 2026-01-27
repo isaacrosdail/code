@@ -1,0 +1,7 @@
+# Facts are always just rows in relations. Think "tables", NOT variables or functions.
+
+# First rule here says that every edge is a path of length 1
+1	2
+
+# Second rule says if there is a path from x to z and an edge from z to y, then there is also a path from x to y.
+2	3

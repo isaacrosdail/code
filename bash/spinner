@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+
+# animation for a spinner
+# from 'you suck at programming' video :D
+# link: https://www.youtube.com/watch?v=muCcQ1W33tc
+
+
+# Global, want to ensure this is un-set by default
+SPINNER_PID=
+DEBUG=false
+THEME=default
+CHARS=
+
+usage() {
+    # "here doc"?
+    # $0 = gives us program name?
+    # ## = greedily find and delete (from left)
+    # * = anything
+    # / = up to the first literal '/' character
+    # So this gives us base name of executed program?
+    local prog=${0##*/}
+# heredoc body only strips leading TABS, so since we use spaces, we can,
+# and have to, just un-indent this part
+cat <<-EOF
+    Usage: $prog [options] <cmd>
+
+    Run a command with an animated spinner.
+
+    Options
+    -d          enable debug output
+    -t <theme>  theme to use, default is $THEME
+    -h          print this message & exit
+EOF
+
+}
+
+spinner(){
+    # array of chars for spiciness
+    # original way, but using theme setting now!
+    #local chars=(
+    #    '\'
+    #    '|'
+    #    '/'
+    #    '-'
+    #)
+    local c # so it doesn't bleed into global scope?
+    # is...that a thing in bash vs other langs?
+    while true; do
+        # loop over chars in chars array above
+        # @ = current iteration val?
+        # so we're basically doing: for c in my_arr[i]?
+        # for c in "${chars[@]}"; do
+        for c in "${CHARS[@]}"; do
+            # \r is a character return
+            # moves the cursor all the way to the left of the line?
+            # important for 'stay in place' effect
+            # we put it after the spinner so the spinner clears
+            # when the other 'Done!' echoes print?
+            printf ' %s \r' "$c"
+            # sleep doesn't always support fractional units, but
+            # he insists it's never been an issue for him
+            # essentially our "framerate" for spinner lol
+            sleep .2
+        done
+    done
+}
+
+debug() {
+    # bash doesnt have booleans??
+    if $DEBUG; then
+        # $* = joins all args into one string separated by the first
+        # character of IFS (space by default)?
+        echo "$$ $*" >&2
+    fi
+}
+
+# We'll have this run when the program exits
+# be it by ctrl+C, etc
+cleanup(){
+    echo 'done'
+
+    # -n = the following variable is set, and contains something
+    # OTHER than the empty string ''
+    # so we're checking that SPINNER_PID is already set
+    # to avoid race conditions since we set it below
+    if [[ -n $SPINNER_PID ]]; then
+        debug "killing spinner ($SPINNER_PID)"
+        kill "$SPINNER_PID"
+    fi
+
+    debug 'finished spinner'
+}
+
+load-theme() {
+    local theme=$1
+
+    case "$theme" in
+        default) CHARS=('\' '|' '/' '-');;
+        dots) CHARS=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏);;
+        *)
+                echo "invalid theme: $THEME" >&2;
+                usage >&2;
+                exit 1
+                ;;
+    esac
+}
+
+main(){
+    # declare these as local cause it'll reset the 
+    # internal state of getopts?
+    local opt OPTIND OPTARG
+    # getopts = getting options in bash
+    # t: => for theme, : is bc we're taking input?
+    while getopts 'dht:' opt; do
+        case "$opt" in
+            d) DEBUG=true;;
+            h) usage; return 0;;
+            t) THEME=$OPTARG;;
+            *) usage >&2; return 1;;
+        esac
+    done
+
+    # spinner -d sleep 5 <- once we shift, we'll have sleep 5
+    shift "$((OPTIND - 1))"
+    # sleep 5   <- so we can just treat that like the command we need to execute
+    #               basically, this "unwraps" the spinner part?
+
+    # this will define the CHARS array, with our active theme's characters :D
+    load-theme "$THEME"
+
+    # We should check that there aren't NO arguments given
+    # $# = number of arguments that were passed in?
+    # >&2 = output to stderr (is that like /dev/null?)
+    if (($# == 0)); then
+        usage >&2
+        return 1
+    fi
+
+    trap cleanup EXIT
+
+    # $$ = current pid?
+    debug 'starting spinner'
+
+    # putting spinner in the background using &
+    # so it'll execute in the bg while some-really-long-command executes
+    spinner &
+    # $! = builtin, "get me the pid of last process put into background"
+    # this way, we can then kill spinner when program we're waiting on is done!
+    SPINNER_PID=$!
+
+    debug "SPINNER_PID=$SPINNER_PID"
+
+    # takes the arguments user gives and just run it like a command
+    # properly broken up into multiple arguments
+    # this way, we can take anything while invoking spinner without hardcoding it, like so:
+    # ./spinner ./some-really-long-command
+    # ./spinner sleep 3
+    # etc
+    # This essentially makes spinner a wrapper for whatever command we wanna give it
+    # that forks out a spinner for us
+    "$@"
+}
+
+main "$@"
+
+# builtin to bash: wait will wait for all background jobs to finish executing
+# wait
+

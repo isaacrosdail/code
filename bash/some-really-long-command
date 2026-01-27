@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+
+# loop 1-4 inclusive
+for i in {1..4}; do
+    # use $i to reference i inside echo
+    # $$ = current pid?
+    echo "$$ finished $i/4 ticks"
+    sleep 1
+done
+

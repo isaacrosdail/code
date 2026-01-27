@@ -1,0 +1,9 @@
+.decl edge(x:number, y:number) // 
+.input edge // tells Souffle to load base facts for `edge` from our input file
+string 
+// path(x,y) is another relation we're defining
+.decl path(x:number, y:number) // .decl declares relations (tables)
+.output path // tells it to emit all derived facts for that relation
+
+path(x, y) :- edge(x, y).
+path(x, y) :- path(x, z), edge(z, y).

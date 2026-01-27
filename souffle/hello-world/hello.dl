@@ -1,0 +1,4 @@
+
+.decl hello(msg:symbol)
+.output hello
+hello("hello, world").
