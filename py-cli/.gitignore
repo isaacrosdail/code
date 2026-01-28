@@ -1,0 +1,25 @@
+# Custom .gitignore for Vesper project
+
+# ==========================
+# Python build artifacts
+# ==========================
+__pycache__/
+# *.py[cod]
+# *$py.class
+
+# ==========================
+# Tools & Scratch
+# ==========================
+.ruff_cache/
+
+# ==========================
+# Environment files / venv
+# ==========================
+*.env
+# .venv
+# env/
+# venv/
+# ENV/
+# env.bak/
+# venv.bak/
+

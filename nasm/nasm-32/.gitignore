@@ -1,0 +1,28 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+# Allow .asm, .txt, and makefiles
+!*.asm
+!*.txt
+!makefile
+
+# Compiled object files
+*.o
+
+# Executable files
+*.exe
+
+# NASM output files
+*.bin
+*.elf
+*.map
+
+# Build directories
+/build
+/bin
