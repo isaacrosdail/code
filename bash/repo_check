@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# 1. Scan recursively through all files searching for .git?
+# 2. If found, do a diff against remote, checking for 2 things:
+    # 2a. File count of ours === theirs?
+    # 2b. File sizes also identical?
+
+# Perty colors
+# \033 = begin ANSI
+# [ = idfk
+# 36 = cyan foreground (ie, text color)
+# m = terminates ANSI color sequence
+# $'..' = tells bash to interpret escape sequences when the string is created
+# We COULD just feed actual text into printf, but this is more explicit/safer
+# Think /../ in JS to specifically denote regexp literals
+RESET=$'\033[0m'
+CYAN=$'\033[36m'
+
+# First arg becomes $1 ($2 = second, etc. But $0 = script name itself)
+# search_path="$1"
+# We can do one better and have a default path:
+# This uses $1 OR defaults to "." if no arg given
+search_path="${1:-.}"
+printf "Searching in: $search_path\n\n"
+
+# 1. =$() <- captures command output (command substitution?)
+# then filter dirs with grep
+git_dirs=$(find "$search_path" -name ".git" -type d | grep -Ev ".pyenv|node_modules|.venv")
+
+# % operator
+# '%' works from the right
+# '#' works from the left
+# and both take glob patterns
+# This removes the "/.git" from the end of a string
+# so if we had: thingy_two.py and wanted to chop off everything but 'thingy',
+# we could do this:
+# after=${thingy%_two.py}?
+##### repo_path=${git_dirs%/.git}
+
+### For counting filesizes, we have a few options:
+# du: [-s]ummarize (total for dir), [-h]uman-readable format, [-b]ytes, [-k]ilobytes
+# cut: field extraction tool!
+# EX: say 'du -sb .' outputs: 1234567    .
+# cut -f1 goes "give me field 1" (fields split by tabs
+# so cut throws away the path part ('.' above) and extracts just the number
+# -d flag on cut is to specify the delimiter
+# we could split by spaces and grab field 2:
+# cut -d' ' -f2
+# or split by commas and grab fields 1-3:
+# cut -d',' -f1-3
+#total_size=$(du -sh . | cut -f1)
+#total_bytes=$(du -sb . | cut -f1)
+#size_KB=$(du -sk . | cut -f1)
+
+# Loop over to get file count
+# IFS = internal field separator (setting it empty prevents bash from splitting on spaces/tabs within each line)
+# <<< "$git_dirs" = a 'here string' - feeds the content of $git_dirs as input to the loop
+while IFS= read -r git_dir; do
+    repo_path=${git_dir%/.git}
+    # echo "Now in: $repo_path"
+    # Count files in this specific repo
+    cd "$repo_path"
+    file_count=$(find . -type f | grep -Ev ".pyenv|node_modules" | wc -l)
+    total_bytes=$(du -sb . | cut -f1)
+    # printf "${CYAN}%-25s${RESET} files in:%8s\n" "$file_count" "$repo_path"
+    # ${var/pattern/replacement} = bash's parameter expansion?
+    # Single /  => replace first match
+    # Double // => replace ALL matches
+    # Then ofc \ to escape so we can use literal '/'s for paths
+    # clean_path=${repo_path/\/home\/user\//~/}
+    clean_path=${repo_path/#$HOME/"~"}
+    printf "%-30s ${CYAN}%8s${RESET} files, size: %s\n" "$clean_path" "$file_count" "$total_bytes"
+    cd .. # go back to parent
+done <<< "$git_dirs"
+
+# String interpolation is like so:
+# printf "${CYAN}Filtered dirs:${RESET} $git_dirs\n\n${CYAN}repo_path:${RESET} $repo_path\n\n"
