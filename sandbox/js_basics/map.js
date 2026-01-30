@@ -7,6 +7,9 @@
 // index – (optional) current index
 // array – (optional) the array being mapped
 
+// So, here, we're ignoring value and only care about index:
+// .map(_, i) => ... );
+
 // Square each number
 const nums1 = [1, 2, 3, 4]
 const squares = nums1.map(n => n * n);
@@ -128,3 +131,12 @@ const newArr4 = todos
     .map(todo => `Task ${todo.id}: ${todo.title}`);
 
 console.log(newArr4);
+
+// Example from our React Snake game:
+Array.from({ length: 400 }) // -> [undefined, undefined, ... 400 times]
+    .map((_, i) => ...)     // -> map gives (value, idx)
+                            //      value = undefined (don't care, use _)
+                            //      idx = 0, 1, 2, ... 399
+
+
+
