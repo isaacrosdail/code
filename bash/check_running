@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Check if gedit is running (for example)
+# -x flag only match processes whose name (or command line if -f is
+# specified) exactly matches the pattern
+
+# We could also check if the prog is NOT running using:
+# if ! pgrep -x ....
+# Simple "not", no surprises there
+
+if pgrep -x "gedit" > /dev/null
+then
+    echo "Running"
+else
+    echo "Nah dawg"
+fi
